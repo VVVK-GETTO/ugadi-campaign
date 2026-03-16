@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getto - New Year, New Outfit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: black;
+            background-color: white;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .primary-text { color: #25bcb4; }
+        .primary-bg { background-color: #25bcb4; }
+        .primary-border { border-color: #25bcb4; }
+        
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        .progress-dot.active {
+            background-color: #25bcb4;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        .dashed-circle {
+            border: 3px dashed #bbf1ef;
+            border-radius: 50%;
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .liquid {
+            fill: #25bcb4;
+            transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-badge {
+            background: rgba(37, 188, 180, 0.1);
+            color: #25bcb4;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            letter-spacing: 0.05em;
+        }
+
+        .upload-btn {
+            box-shadow: 0 10px 25px -5px rgba(37, 188, 180, 0.4);
+        }
+
+        .sticky-progress {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 16px;
+            border-top: 1px solid #f3f4f6;
+            z-index: 50;
+        }
+
+        .loader {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #25bcb4;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden-section {
+            display: none;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-gray-100">
+        <div>
+            <img src="src/images/getto-logo.png" alt="GETTO Logo" class="h-8">
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest" id="header-subtitle">UGADI SPECIAL</p>
+        </div>
+        <div class="glass-badge" id="header-progress">0 / 6 INGREDIENTS</div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="game-content">
+        <!-- Hero Section -->
+        <section id="hero" class="min-height-screen pt-28 pb-12 px-8 flex flex-col items-center text-center">
+            <h2 class="text-4xl font-bold mb-2">New Year,</h2>
+            <h2 class="text-4xl font-bold primary-text mb-6">New Outfit</h2>
+            <p class="text-gray-500 leading-relaxed mb-12 max-w-xs">
+                Celebrate Ugadi by making your own Ugadi Chutney. Find the 6 ingredients and unlock exclusive Getto discounts.
+            </p>
+
+            <div class="relative w-64 h-64 mb-12">
+                <div class="dashed-circle absolute inset-0"></div>
+                <div class="absolute inset-4 flex items-center justify-center bg-white rounded-full shadow-inner">
+                    <svg viewBox="0 0 100 100" class="w-32 h-32">
+                        <path id="bowl-mask" d="M10,50 Q10,90 50,90 Q90,90 90,50 L10,50" fill="none" stroke="#e5e7eb" stroke-width="2"/>
+                        <g clip-path="url(#bowl-clip)">
+                            <rect id="liquid-fill" x="0" y="100" width="100" height="100" class="liquid" />
+                        </g>
+                        <!-- Simple Bowl Outline -->
+                        <path d="M10,50 Q10,90 50,90 Q90,90 90,50 Z" fill="none" stroke="#25bcb4" stroke-width="3" />
+                        <path d="M60,40 L80,20" stroke="#9ca3af" stroke-width="3" stroke-linecap="round" />
+                    </svg>
+                    <defs>
+                        <clipPath id="bowl-clip">
+                            <path d="M10,50 Q10,90 50,90 Q90,90 90,50 Z" />
+                        </clipPath>
+                    </defs>
+                </div>
+            </div>
+
+            <button onclick="scrollToIngredients()" class="animate-bounce">
+                <svg class="w-8 h-8 primary-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+        </section>
+
+        <!-- Ingredient Vertical List -->
+        <div id="ingredients-container" class="pb-32 relative">
+            <!-- Progress Dots Sidebar -->
+            <div class="fixed right-6 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-40">
+                <div class="progress-dot active" data-step="0"></div>
+                <div class="progress-dot" data-step="1"></div>
+                <div class="progress-dot" data-step="2"></div>
+                <div class="progress-dot" data-step="3"></div>
+                <div class="progress-dot" data-step="4"></div>
+                <div class="progress-dot" data-step="5"></div>
+            </div>
+
+            <!-- Ingredient Slots -->
+            <div id="ingredient-slots"></div>
+        </div>
+    </main>
+
+    <!-- Results Screen (Initially Hidden) -->
+    <div id="result-screen" class="hidden-section fixed inset-0 z-[60] bg-white overflow-y-auto px-8 py-20 text-center">
+        <div id="confetti-container"></div>
+        <h2 class="text-2xl font-bold mb-2">Congratulations!</h2>
+        <h3 class="text-lg text-gray-600 mb-8">Your Ugadi Chutney is Ready</h3>
+        
+        <div class="bg-gray-50 rounded-3xl p-8 mb-8 border border-gray-100">
+            <p class="text-gray-500 uppercase tracking-widest text-xs font-bold mb-2">YOUR REWARD</p>
+            <h4 id="discount-display" class="text-5xl font-black primary-text mb-2">40% OFF</h4>
+            <p class="text-sm font-medium">on Getto India</p>
+        </div>
+
+        <p class="text-gray-500 italic mb-12">
+            “Life brings sweet, sour, spicy and bitter moments. May this Ugadi bring happiness, success and new beginnings.”
+        </p>
+
+        <div class="space-y-4 mb-12">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Collect your coupon at</p>
+            <p class="font-bold">Varalakshmi Tiffins<br><span class="text-gray-500 font-normal">DLF Street, Hyderabad</span></p>
+            <a href="https://www.google.com/maps/search/Varalakshmi+Tiffins+DLF+Street+Hyderabad" target="_blank" class="inline-flex items-center gap-2 primary-bg text-white px-8 py-4 rounded-full font-bold shadow-lg hover:opacity-90 transition-all">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                Get Directions
+            </a>
+        </div>
+
+        <hr class="border-gray-100 mb-12">
+
+        <div class="space-y-6">
+            <h5 class="font-bold">Challenge your friends to make their Ugadi Chutney!</h5>
+            <div class="flex flex-col gap-3">
+                <button onclick="shareWhatsApp()" class="w-full bg-[#25D366] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2">
+                    Share on WhatsApp
+                </button>
+                <button onclick="copyLink()" class="w-full bg-gray-100 text-black py-4 rounded-2xl font-bold">
+                    Copy Link
+                </button>
+            </div>
+            <button onclick="location.reload()" class="text-gray-400 text-sm font-medium underline">Start Again</button>
+        </div>
+    </div>
+
+    <!-- Sticky Progress Bar -->
+    <div class="sticky-progress flex items-center gap-4">
+        <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100">
+            <svg viewBox="0 0 100 100" class="w-8 h-8">
+                <path d="M10,50 Q10,90 50,90 Q90,90 90,50 Z" fill="#25bcb4" fill-opacity="0.2" stroke="#25bcb4" stroke-width="2" />
+            </svg>
+        </div>
+        <div class="flex-1">
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Your Progress</p>
+            <p class="font-bold primary-text" id="footer-count">0 / 6 Collected</p>
+        </div>
+        <button id="mix-btn" disabled class="bg-gray-200 text-gray-400 px-6 py-3 rounded-full font-bold transition-all" onclick="showResults()">
+            Mix Chutney
+        </button>
+    </div>
+
+    <!-- Hidden Input for Uploads -->
+    <input type="file" id="image-upload" accept="image/*" capture="environment" class="hidden">
+
+    <script>
+        const apiKey = "AIzaSyCvWa9s-xlGvC4B5b4Ymj__uptbJpeqkc0";
+        
+        const ingredients = [
+            { id: 'neem', name: 'Neem Flowers', flavor: 'BITTER', symbol: '🍃', desc: 'Represents sadness, hardships, or difficulties.' },
+            { id: 'jaggery', name: 'Jaggery', flavor: 'SWEET', symbol: '🍯', desc: 'Represents happiness, joy, and success.' },
+            { id: 'mango', name: 'Raw Mango', flavor: 'TANGY', symbol: '🥭', desc: 'Represents surprises and new challenges.' },
+            { id: 'tamarind', name: 'Tamarind Pulp', flavor: 'SOUR', symbol: '🥣', desc: 'Represents unpleasant experiences.' },
+            { id: 'chili', name: 'Green Chili', flavor: 'SPICY', symbol: '🌶️', desc: 'Represents energy and anger.' },
+            { id: 'salt', name: 'Salt', flavor: 'SALTY', symbol: '🧂', desc: 'Represents fear or anxiety.' }
+        ];
+
+        let collected = new Set();
+
+        // Initialize UI
+        function init() {
+            const container = document.getElementById('ingredient-slots');
+            ingredients.forEach((ing, idx) => {
+                const section = document.createElement('section');
+                section.className = `ingredient-section min-h-screen py-20 px-8 flex flex-col items-center justify-center text-center opacity-30 transition-opacity duration-500`;
+                section.id = `section-${idx}`;
+                section.innerHTML = `
+                    <div class="relative w-48 h-48 mb-8">
+                        <div class="absolute inset-0 bg-gray-50 rounded-full"></div>
+                        <div class="absolute inset-0 flex items-center justify-center text-6xl">${ing.symbol}</div>
+                    </div>
+                    <div class="glass-badge mb-4">${ing.flavor}</div>
+                    <h3 class="text-3xl font-bold mb-4">${ing.name}</h3>
+                    <p class="text-gray-500 leading-relaxed mb-12 max-w-xs">${ing.desc}</p>
+                    
+                    <button onclick="triggerUpload(${idx})" id="upload-btn-${idx}" class="upload-btn primary-bg text-white w-20 h-20 rounded-full flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
+                    <p class="mt-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Upload Image</p>
+                    <div id="status-${idx}" class="mt-4 hidden font-medium"></div>
+                `;
+                container.appendChild(section);
+            });
+
+            // Register GSAP ScrollTrigger
+            gsap.registerPlugin(ScrollTrigger);
+            ingredients.forEach((_, idx) => {
+                ScrollTrigger.create({
+                    trigger: `#section-${idx}`,
+                    start: "top center",
+                    onEnter: () => updateActiveDot(idx),
+                    onEnterBack: () => updateActiveDot(idx)
+                });
+
+                gsap.to(`#section-${idx}`, {
+                    scrollTrigger: {
+                        trigger: `#section-${idx}`,
+                        start: "top 80%",
+                        end: "top 20%",
+                        toggleActions: "play reverse play reverse"
+                    },
+                    opacity: 1,
+                    scale: 1,
+                    duration: 0.5
+                });
+            });
+        }
+
+        function updateActiveDot(idx) {
+            document.querySelectorAll('.progress-dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === idx);
+            });
+        }
+
+        function scrollToIngredients() {
+            window.scrollTo({ top: document.getElementById('section-0').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        function triggerUpload(idx) {
+            const input = document.getElementById('image-upload');
+            input.setAttribute('data-target-index', idx);
+            input.click();
+        }
+
+        // Store uploaded images for verification later
+        const uploadedImages = new Map();
+        
+        document.getElementById('image-upload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            const targetIdx = parseInt(e.target.getAttribute('data-target-index'));
+            if (!file || isNaN(targetIdx)) return;
+
+            const btn = document.getElementById(`upload-btn-${targetIdx}`);
+            const status = document.getElementById(`status-${targetIdx}`);
+            
+            // Store image for later verification
+            const base64 = await fileToBase64(file);
+            uploadedImages.set(targetIdx, base64);
+            collected.add(targetIdx);
+            
+            btn.innerHTML = `
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+            `;
+            btn.classList.replace('primary-bg', 'bg-green-500');
+            btn.classList.add('bg-green-500');
+            status.innerHTML = '<span class="text-green-500 font-bold">Image Uploaded!</span>';
+            updateProgress();
+            e.target.value = '';
+        });
+
+        // Verify all uploaded ingredients with Gemini API
+        async function verifyAllIngredients() {
+            const results = {};
+            const failedIngredients = [];
+            
+            for (let idx = 0; idx < ingredients.length; idx++) {
+                if (uploadedImages.has(idx)) {
+                    const base64 = uploadedImages.get(idx);
+                    const ingredient = ingredients[idx];
+                    
+                    try {
+                        // Detect image type from base64
+                        let mimeType = 'image/jpeg';
+                        if (base64.includes('data:image/png')) {
+                            mimeType = 'image/png';
+                        } else if (base64.includes('data:image/webp')) {
+                            mimeType = 'image/webp';
+                        }
+                        
+                        const response = await fetch(
+                            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+                            {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{
+                                        parts: [
+                                            { text: `Look at this image carefully. Does it contain or show ${ingredient.name}? This is an Indian Ugadi ingredient. Be lenient and answer YES if it looks like the ingredient, even if quality is poor. Answer with only YES or NO.` },
+                                            { inlineData: { mimeType: mimeType, data: base64.split(',')[1] } }
+                                        ]
+                                    }]
+                                })
+                            }
+                        );
+                        
+                        const data = await response.json();
+                        
+                        // Check for API errors
+                        if (data.error) {
+                            console.error(`API Error for ${ingredient.name}:`, data.error);
+                            // On API error, accept the image (give benefit of doubt)
+                            results[idx] = true;
+                            continue;
+                        }
+                        
+                        const result = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'NO';
+                        const isValid = result.toUpperCase().includes('YES');
+                        results[idx] = isValid;
+                        
+                        console.log(`${ingredient.name}: ${result} (${isValid ? 'PASS' : 'FAIL'})`);
+                        
+                        if (!isValid) {
+                            failedIngredients.push({ idx, name: ingredient.name });
+                        }
+                    } catch (err) {
+                        console.error(`Error verifying ${ingredient.name}:`, err);
+                        // On error, accept the image
+                        results[idx] = true;
+                    }
+                }
+            }
+            
+            return { results, failedIngredients };
+        }
+
+        function updateProgress() {
+            const count = collected.size;
+            document.getElementById('header-progress').innerText = `${count} / 6 INGREDIENTS`;
+            document.getElementById('footer-count').innerText = `${count} / 6 Collected`;
+            
+            // Update bowl filling
+            const fillPercent = (count / 6) * 100;
+            const liquidY = 100 - (fillPercent * 0.4); // Only fills 40% of the bowl height for aesthetic
+            gsap.to('#liquid-fill', { y: liquidY, duration: 1 });
+
+            // Enable Mix Button
+            const mixBtn = document.getElementById('mix-btn');
+            if (count >= 3) {
+                mixBtn.disabled = false;
+                mixBtn.classList.replace('bg-gray-200', 'primary-bg');
+                mixBtn.classList.replace('text-gray-400', 'text-white');
+                mixBtn.classList.add('shadow-lg');
+            }
+        }
+
+        function showResults() {
+            const count = collected.size;
+            if (count < 3) return;
+            
+            // Show loading screen with verification in progress
+            const screen = document.getElementById('result-screen');
+            screen.style.display = 'block';
+            gsap.to(screen, { opacity: 1, duration: 0.5 });
+            
+            // Show loader message
+            const content = screen.innerHTML;
+            screen.innerHTML = `
+                <div class="flex flex-col items-center justify-center min-h-screen gap-4">
+                    <div class="loader" style="width: 60px; height: 60px; border-width: 5px;"></div>
+                    <p class="text-gray-500 text-lg font-medium">Verifying your ingredients...</p>
+                </div>
+            `;
+            
+            // Verify all ingredients
+            verifyAllIngredients().then(({ results, failedIngredients }) => {
+                if (failedIngredients.length === 0) {
+                    // All passed - show coupon
+                    let discount = "30%";
+                    if (count === 4) discount = "40%";
+                    if (count === 5) discount = "50%";
+                    if (count === 6) discount = "60%";
+                    
+                    screen.innerHTML = `
+                        <div id="confetti-container"></div>
+                        <h2 class="text-2xl font-bold mb-2">Congratulations!</h2>
+                        <h3 class="text-lg text-gray-600 mb-8">Your Ugadi Chutney is Ready</h3>
+                        
+                        <div class="bg-gray-50 rounded-3xl p-8 mb-8 border border-gray-100">
+                            <p class="text-gray-500 uppercase tracking-widest text-xs font-bold mb-2">YOUR REWARD</p>
+                            <h4 id="discount-display" class="text-5xl font-black primary-text mb-2">${discount} OFF</h4>
+                            <p class="text-sm font-medium">on Getto India</p>
+                        </div>
+
+                        <p class="text-gray-500 italic mb-12">
+                            "Life brings sweet, sour, spicy and bitter moments. May this Ugadi bring happiness, success and new beginnings."
+                        </p>
+
+                        <div class="space-y-4 mb-12">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Collect your coupon at</p>
+                            <p class="font-bold">Varalakshmi Tiffins<br><span class="text-gray-500 font-normal">DLF Street, Hyderabad</span></p>
+                            <a href="https://www.google.com/maps/search/Varalakshmi+Tiffins+DLF+Street+Hyderabad" target="_blank" class="inline-flex items-center gap-2 primary-bg text-white px-8 py-4 rounded-full font-bold shadow-lg hover:opacity-90 transition-all">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                                Get Directions
+                            </a>
+                        </div>
+
+                        <hr class="border-gray-100 mb-12">
+
+                        <div class="space-y-6">
+                            <h5 class="font-bold">Challenge your friends to make their Ugadi Chutney!</h5>
+                            <div class="flex flex-col gap-3">
+                                <button onclick="shareWhatsApp()" class="w-full bg-[#25D366] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2">
+                                    Share on WhatsApp
+                                </button>
+                                <button onclick="copyLink()" class="w-full bg-gray-100 text-black py-4 rounded-2xl font-bold">
+                                    Copy Link
+                                </button>
+                            </div>
+                            <button onclick="location.reload()" class="text-gray-400 text-sm font-medium underline">Start Again</button>
+                        </div>
+                    `;
+                    createConfetti();
+                } else {
+                    // Some failed - show error message
+                    const failedList = failedIngredients.map(f => `<li class="text-red-500 font-bold">• ${f.name}</li>`).join('');
+                    screen.innerHTML = `
+                        <div class="flex flex-col items-center justify-center gap-6">
+                            <h2 class="text-2xl font-bold">Verification Failed</h2>
+                            <p class="text-gray-600">The following ingredients didn't match:</p>
+                            <ul class="text-left space-y-2">
+                                ${failedList}
+                            </ul>
+                            <p class="text-gray-500 text-sm">Please re-upload the correct ingredients</p>
+                            <button onclick="document.getElementById('result-screen').style.display='none'" class="primary-bg text-white px-8 py-3 rounded-full font-bold">
+                                Try Again
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Reset failed ingredients for re-upload
+                    failedIngredients.forEach(f => {
+                        uploadedImages.delete(f.idx);
+                        collected.delete(f.idx);
+                        const btn = document.getElementById(`upload-btn-${f.idx}`);
+                        btn.innerHTML = `
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        `;
+                        btn.classList.remove('bg-green-500');
+                        btn.classList.add('primary-bg');
+                        const status = document.getElementById(`status-${f.idx}`);
+                        status.innerHTML = '<span class="text-red-500">Please re-upload</span>';
+                    });
+                    updateProgress();
+                }
+            }).catch(err => {
+                console.error('Verification error:', err);
+                screen.innerHTML = `
+                    <div class="flex flex-col items-center justify-center gap-6">
+                        <h2 class="text-2xl font-bold text-red-500">Verification Error</h2>
+                        <p class="text-gray-600">Please try again</p>
+                        <button onclick="document.getElementById('result-screen').style.display='none'" class="primary-bg text-white px-8 py-3 rounded-full font-bold">
+                            Back
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function createConfetti() {
+            const container = document.getElementById('confetti-container');
+            for(let i=0; i<50; i++) {
+                const conf = document.createElement('div');
+                conf.style.cssText = `
+                    position: fixed;
+                    width: 10px;
+                    height: 10px;
+                    background: ${['#25bcb4', '#FFD700', '#FF6347', '#32CD32'][Math.floor(Math.random()*4)]};
+                    top: -10px;
+                    left: ${Math.random()*100}vw;
+                    z-index: 100;
+                    border-radius: 2px;
+                `;
+                document.body.appendChild(conf);
+                gsap.to(conf, {
+                    y: window.innerHeight + 20,
+                    x: `+=${Math.random()*100 - 50}`,
+                    rotation: Math.random()*360,
+                    duration: Math.random()*2 + 1,
+                    ease: "power1.out",
+                    onComplete: () => conf.remove()
+                });
+            }
+        }
+
+        async function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function shareWhatsApp() {
+            const text = encodeURIComponent("I just made my own Ugadi Chutney and unlocked a Getto discount! Try it here: https://www.gettoindia.com");
+            window.open(`https://wa.me/?text=${text}`);
+        }
+
+        function copyLink() {
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = window.location.href;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            
+            const btn = event.currentTarget;
+            const originalText = btn.innerText;
+            btn.innerText = "Link Copied!";
+            setTimeout(() => btn.innerText = originalText, 2000);
+        }
+
+        // Handle Scroll transitions for progress dots
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('.ingredient-section');
+            let current = 0;
+            sections.forEach((section, i) => {
+                const top = section.getBoundingClientRect().top;
+                if (top < window.innerHeight / 2) {
+                    current = i;
+                }
+            });
+            updateActiveDot(current);
+        });
+
+        init();
+    </script>
+</body>
+</html>
