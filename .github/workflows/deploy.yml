@@ -3,22 +3,40 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main # Set this to your default branch name
+      - main
+
+permissions:
+  contents: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Inject API Key
+        env:
+          MY_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          # Replaces the placeholder string with the GitHub Secret during deployment
-          sed -i "s/__GEMINI_API_KEY__/${{ secrets.GEMINI_API_KEY }}/g" index.html
+          if [ -z "$MY_API_KEY" ]; then
+            echo "Error: GEMINI_API_KEY secret is not set in GitHub."
+            exit 1
+          fi
+          # We use '|' as a delimiter in sed because API keys can contain '/'
+          # We are searching for exactly: "__GEMINI_API_KEY__"
+          sed -i "s|__GEMINI_API_KEY__|$MY_API_KEY|g" index.html
+
+          # Optional: Verify the replacement happened (masking the key in logs)
+          if grep -q "__GEMINI_API_KEY__" index.html; then
+            echo "Error: Placeholder was NOT replaced."
+            exit 1
+          else
+            echo "Success: Placeholder replaced successfully."
+          fi
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: . # The folder the action should deploy.
-          branch: gh-pages # The branch the action should deploy to.
+          folder: .
+          branch: gh-pages
