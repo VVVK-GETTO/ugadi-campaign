@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Getto - New Year, New Outfit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        color: black;
+        background-color: white;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-tap-highlight-color: transparent;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      .primary-text {
+        color: #25bcb4;
+      }
+      .primary-bg {
+        background-color: #25bcb4;
+      }
+      .primary-border {
+        border-color: #25bcb4;
+      }
+      .progress-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #e5e7eb;
+        transition: all 0.3s ease;
+      }
+      .progress-dot.active {
+        background-color: #25bcb4;
+        height: 24px;
+        border-radius: 4px;
+      }
+      .dashed-circle {
+        border: 3px dashed #bbf1ef;
+        border-radius: 50%;
+        animation: rotate 20s linear infinite;
+      }
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .liquid {
+        fill: #25bcb4;
+        transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .glass-badge {
+        background: rgba(37, 188, 180, 0.1);
+        color: #25bcb4;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 12px;
+        letter-spacing: 0.05em;
+      }
+      .upload-btn {
+        box-shadow: 0 10px 25px -5px rgba(37, 188, 180, 0.4);
+      }
+      .sticky-progress {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 16px;
+        border-top: 1px solid #f3f4f6;
+        z-index: 50;
+      }
+      .loader {
+        border: 3px solid #f3f4f6;
+        border-top: 3px solid #25bcb4;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .hidden-section {
+        display: none;
+        opacity: 0;
+      }
+      .ingredient-section {
+        min-height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <header
+      class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-gray-100"
+    >
+      <div>
+        <div class="text-2xl font-black italic tracking-tighter">GETTO</div>
+        <p
+          class="text-[10px] text-gray-400 font-bold uppercase tracking-widest"
+          id="header-subtitle"
+        >
+          UGADI SPECIAL
+        </p>
+      </div>
+      <div class="glass-badge flex items-center gap-2" id="header-progress">
+        <span>0 / 6 INGREDIENTS</span>
+      </div>
+    </header>
+
+    <main id="game-content">
+      <section
+        id="hero"
+        class="min-height-screen pt-28 pb-12 px-8 flex flex-col items-center text-center"
+      >
+        <h2 class="text-4xl font-bold mb-2">New Year,</h2>
+        <h2 class="text-4xl font-bold primary-text mb-6">New Outfit</h2>
+        <p class="text-gray-500 leading-relaxed mb-12 max-w-xs">
+          Celebrate Ugadi by making your own Ugadi Chutney. Find the 6
+          ingredients and unlock exclusive Getto discounts.
+        </p>
+
+        <div class="relative w-64 h-64 mb-12">
+          <div class="dashed-circle absolute inset-0"></div>
+          <div
+            class="absolute inset-4 flex items-center justify-center bg-white rounded-full shadow-inner"
+          >
+            <svg viewBox="0 0 100 100" class="w-32 h-32">
+              <path
+                id="bowl-mask"
+                d="M10,50 Q10,90 50,90 Q90,90 90,50 L10,50"
+                fill="none"
+                stroke="#e5e7eb"
+                stroke-width="2"
+              />
+              <g clip-path="url(#bowl-clip)">
+                <rect
+                  id="liquid-fill"
+                  x="0"
+                  y="100"
+                  width="100"
+                  height="100"
+                  class="liquid"
+                />
+              </g>
+              <path
+                d="M10,50 Q10,90 50,90 Q90,90 90,50 Z"
+                fill="none"
+                stroke="#25bcb4"
+                stroke-width="3"
+              />
+              <path
+                d="M60,40 L80,20"
+                stroke="#9ca3af"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+            </svg>
+            <defs>
+              <clipPath id="bowl-clip">
+                <path d="M10,50 Q10,90 50,90 Q90,90 90,50 Z" />
+              </clipPath>
+            </defs>
+          </div>
+        </div>
+
+        <button onclick="scrollToIngredients()" class="animate-bounce">
+          <svg
+            class="w-8 h-8 primary-text"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            ></path>
+          </svg>
+        </button>
+      </section>
+
+      <div id="ingredients-container" class="relative">
+        <div
+          class="fixed right-6 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-40"
+        >
+          <div class="progress-dot active" data-step="0"></div>
+          <div class="progress-dot" data-step="1"></div>
+          <div class="progress-dot" data-step="2"></div>
+          <div class="progress-dot" data-step="3"></div>
+          <div class="progress-dot" data-step="4"></div>
+          <div class="progress-dot" data-step="5"></div>
+        </div>
+      </div>
+    </main>
+
+    <div
+      id="result-screen"
+      class="hidden-section fixed inset-0 z-[60] bg-white overflow-y-auto px-8 py-20 text-center"
+    >
+      <div id="confetti-container"></div>
+      <h2 class="text-2xl font-bold mb-2">Congratulations!</h2>
+      <h3 class="text-lg text-gray-600 mb-8">Your Ugadi Chutney is Ready</h3>
+
+      <div class="bg-gray-50 rounded-3xl p-8 mb-8 border border-gray-100">
+        <p
+          class="text-gray-500 uppercase tracking-widest text-xs font-bold mb-2"
+        >
+          YOUR REWARD
+        </p>
+        <h4 id="discount-display" class="text-5xl font-black primary-text mb-2">
+          40% OFF
+        </h4>
+        <p class="text-sm font-medium">on Getto India</p>
+
+        <div
+          class="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-center gap-3"
+        >
+          <div
+            class="text-lg font-bold bg-white px-4 py-2 rounded-xl border border-gray-200"
+          >
+            Code:
+            <span class="primary-text" id="coupon-code-display">UGADI30</span>
+          </div>
+          <button
+            id="copy-coupon-btn"
+            onclick="copyCouponCode()"
+            class="w-full sm:w-auto bg-gray-200 text-black px-6 py-3 rounded-xl font-bold hover:bg-gray-300 transition-colors"
+          >
+            Copy Code
+          </button>
+        </div>
+
+        <a
+          href="https://www.gettoindia.com"
+          target="_blank"
+          class="inline-flex items-center gap-2 primary-bg text-white px-8 py-4 rounded-full font-bold shadow-lg hover:opacity-90 transition-all mt-4"
+        >
+          Visit Site
+        </a>
+      </div>
+
+      <p class="text-gray-500 italic mb-12">
+        “May this Ugadi bring happiness, success and new beginnings.”
+      </p>
+
+      <div class="space-y-4 mb-12">
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">
+          Screen shot your offer and collect your free food coupons on 19th
+          March at
+        </p>
+        <p class="font-bold">
+          Varalakshmi Tiffins<br /><span class="text-gray-500 font-normal"
+            >DLF Street, Hyderabad</span
+          >
+        </p>
+        <a
+          href="https://www.google.com/maps/search/Varalakshmi+Tiffins+DLF+Street+Hyderabad"
+          target="_blank"
+          class="inline-flex items-center gap-2 primary-bg text-white px-8 py-4 rounded-full font-bold shadow-lg hover:opacity-90 transition-all mt-2"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path
+              d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"
+            />
+          </svg>
+          Get Directions
+        </a>
+      </div>
+
+      <hr class="border-gray-100 mb-12" />
+
+      <div class="space-y-6">
+        <h5 class="font-bold">
+          Challenge your friends to make their Ugadi Chutney!
+        </h5>
+        <button
+          onclick="shareWhatsApp()"
+          class="w-full bg-[#25D366] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-colors"
+        >
+          Share on WhatsApp
+        </button>
+        <button
+          onclick="location.reload()"
+          class="text-gray-400 text-sm font-medium underline"
+        >
+          Start Again
+        </button>
+      </div>
+    </div>
+
+    <div class="sticky-progress flex items-center gap-4">
+      <div
+        class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center border border-gray-100"
+      >
+        <svg viewBox="0 0 100 100" class="w-8 h-8">
+          <path
+            d="M10,50 Q10,90 50,90 Q90,90 90,50 Z"
+            fill="#25bcb4"
+            fill-opacity="0.2"
+            stroke="#25bcb4"
+            stroke-width="2"
+          />
+        </svg>
+      </div>
+      <div class="flex-1">
+        <p
+          class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1"
+        >
+          Your Progress
+        </p>
+        <p class="font-bold primary-text" id="footer-count">0 / 6 Collected</p>
+      </div>
+      <button
+        id="mix-btn"
+        disabled
+        class="bg-gray-200 text-gray-400 px-6 py-3 rounded-full font-bold transition-all"
+        onclick="showResults()"
+      >
+        Mix Chutney
+      </button>
+    </div>
+
+    <input type="file" id="image-upload" accept="image/*" class="hidden" />
+
+    <script>
+      /**
+       * 🔒 SECURITY PLACEHOLDER
+       * On GitHub, replace this via GitHub Actions using secrets.GEMINI_API_KEY.
+       * For local development, this script will check for a local variable or fallback.
+       */
+      const apiKey = 'AIzaSyA0nfoSTeX6_DQ3ccWbXOMHSGON2z8iaJI';
+
+      const ingredients = [
+        {
+          id: 'neem',
+          name: 'Neem Flowers',
+          flavor: 'BITTER',
+          posterLabel: 'NEEM - BITTER',
+          symbol: '🍃',
+          desc: 'Represents sadness, hardships, or difficulties.',
+        },
+        {
+          id: 'jaggery',
+          name: 'Jaggery',
+          flavor: 'SWEET',
+          posterLabel: 'JAGGERY - SWEET',
+          symbol: '🍯',
+          desc: 'Represents happiness, joy, and success.',
+        },
+        {
+          id: 'mango',
+          name: 'Raw Mango',
+          flavor: 'TANGY',
+          posterLabel: 'MANGO - TANGY',
+          symbol: '🥭',
+          desc: 'Surprises and new challenges.',
+        },
+        {
+          id: 'tamarind',
+          name: 'Tamarind Pulp',
+          flavor: 'SOUR',
+          posterLabel: 'TAMARIND - SOUR',
+          symbol: '🥣',
+          desc: 'Represents unpleasant experiences.',
+        },
+        {
+          id: 'chili',
+          name: 'Green Chili',
+          flavor: 'SPICY',
+          posterLabel: 'CHILLY - SPICE',
+          symbol: '🌶️',
+          desc: 'Represents energy and anger.',
+        },
+        {
+          id: 'salt',
+          name: 'Salt',
+          flavor: 'SALTY',
+          posterLabel: 'SALT - SALTY',
+          symbol: '🧂',
+          desc: 'Represents fear or anxiety.',
+        },
+      ];
+
+      let collected = new Set();
+
+      async function fetchWithRetry(url, options, retries = 5) {
+        const delays = [1000, 2000, 4000, 8000, 16000];
+        for (let i = 0; i < retries; i++) {
+          try {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+              const errorText = await response.text();
+              throw new Error(`HTTP ${response.status} - ${errorText}`);
+            }
+            return await response.json();
+          } catch (error) {
+            if (i === retries - 1) throw error;
+            await new Promise((res) => setTimeout(res, delays[i]));
+          }
+        }
+      }
+
+      async function verifyImageMatch(uploadedBase64, ingredient) {
+        // Validation check for the API key
+        if (!apiKey || apiKey === 'AIzaSyA0nfoSTeX6_DQ3ccWbXOMHSGON2z8iaJI') {
+          console.error(
+            'API Key not found. Please set your GEMINI_API_KEY secret in GitHub.',
+          );
+          return { passed: false };
+        }
+
+        try {
+          const uploadedMimeType = uploadedBase64
+            .split(',')[0]
+            .split(':')[1]
+            .split(';')[0];
+          const base64Data = uploadedBase64.split(',')[1];
+
+          const prompt = `You are a professional OCR tool. Analyze this printed campaign poster.
+Check if the following text is clearly visible: "${ingredient.posterLabel}".
+Confirm if this is part of the "Ugadi Treasure Hunt" campaign.
+
+Respond ONLY with valid JSON:
+{
+  "isMatch": boolean,
+  "foundText": "description of identified text"
+}`;
+
+          const payload = {
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  { text: prompt },
+                  {
+                    inlineData: {
+                      mimeType: uploadedMimeType,
+                      data: base64Data,
+                    },
+                  },
+                ],
+              },
+            ],
+            generationConfig: {
+              temperature: 0.1,
+              responseMimeType: 'application/json',
+            },
+          };
+
+          // Using the requested gemini-3.1-flash-image-preview model via v1beta endpoint
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${apiKey}`;
+
+          const result = await fetchWithRetry(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          const responseText =
+            result.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!responseText) throw new Error('No response from AI model');
+
+          const jsonResponse = JSON.parse(responseText);
+          console.log(
+            `Verification result for ${ingredient.name}:`,
+            jsonResponse,
+          );
+
+          return { passed: jsonResponse.isMatch === true };
+        } catch (error) {
+          console.error('Verification error details:', error);
+          return { passed: false };
+        }
+      }
+
+      function init() {
+        const container = document.getElementById('ingredients-container');
+        ingredients.forEach((ing, idx) => {
+          const section = document.createElement('section');
+          section.className = `ingredient-section py-20 px-8 flex flex-col items-center justify-center text-center`;
+          section.id = `section-${idx}`;
+          section.innerHTML = `
+                    <div class="relative w-48 h-48 mb-8">
+                        <div class="absolute inset-0 bg-gray-50 rounded-full"></div>
+                        <div class="absolute inset-0 flex items-center justify-center text-6xl">${ing.symbol}</div>
+                    </div>
+                    <div class="glass-badge mb-4">${ing.flavor}</div>
+                    <h3 class="text-3xl font-bold mb-4">${ing.name}</h3>
+                    <p class="text-gray-500 leading-relaxed mb-12 max-w-xs">${ing.desc}</p>
+                    <button onclick="triggerUpload(${idx})" id="upload-btn-${idx}" class="upload-btn primary-bg text-white w-20 h-20 rounded-full flex items-center justify-center shadow-xl hover:scale-105 active:scale-95 transition-all">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
+                    <p class="mt-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Upload Photo</p>
+                    <div id="status-${idx}" class="mt-4 hidden font-medium"></div>
+                `;
+          container.appendChild(section);
+        });
+
+        gsap.registerPlugin(ScrollTrigger);
+        ingredients.forEach((_, idx) => {
+          ScrollTrigger.create({
+            trigger: `#section-${idx}`,
+            start: 'top center',
+            onEnter: () => updateActiveDot(idx),
+            onEnterBack: () => updateActiveDot(idx),
+          });
+          gsap.to(`#section-${idx}`, {
+            scrollTrigger: {
+              trigger: `#section-${idx}`,
+              start: 'top 90%',
+              end: 'bottom 10%',
+              toggleActions: 'play reverse play reverse',
+            },
+            duration: 0.5,
+          });
+        });
+        ScrollTrigger.refresh();
+      }
+
+      function updateActiveDot(idx) {
+        document.querySelectorAll('.progress-dot').forEach((dot, i) => {
+          dot.classList.toggle('active', i === idx);
+        });
+      }
+
+      function scrollToIngredients() {
+        const targetElement = document.getElementById('section-0');
+        if (targetElement)
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      function triggerUpload(idx) {
+        const input = document.getElementById('image-upload');
+        input.setAttribute('data-target-index', idx);
+        input.click();
+      }
+
+      document
+        .getElementById('image-upload')
+        .addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          const targetIdx = parseInt(
+            e.target.getAttribute('data-target-index'),
+          );
+          if (!file || isNaN(targetIdx)) return;
+
+          const btn = document.getElementById(`upload-btn-${targetIdx}`);
+          const status = document.getElementById(`status-${targetIdx}`);
+
+          btn.innerHTML = `<div class="loader" style="width: 30px; height: 30px; border-color: white; border-top-color: transparent;"></div>`;
+          status.innerHTML = `<span class="text-gray-500">Verifying...</span>`;
+          status.classList.remove('hidden');
+
+          const base64 = await fileToBase64(file);
+          const ingredient = ingredients[targetIdx];
+
+          const { passed } = await verifyImageMatch(base64, ingredient);
+
+          if (!passed) {
+            status.innerHTML = `<span class="text-red-500 font-bold">Verification Failed.</span><br /><span class="text-gray-500 text-xs">Ensure the label "${ingredient.posterLabel}" is clear.</span>`;
+            btn.innerHTML = `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`;
+            return;
+          }
+
+          collected.add(targetIdx);
+          btn.innerHTML = `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
+          btn.classList.replace('primary-bg', 'bg-green-500');
+          status.innerHTML =
+            '<span class="text-green-500 font-bold">Verified!</span>';
+          updateProgress();
+          e.target.value = '';
+        });
+
+      async function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function updateProgress() {
+        const count = collected.size;
+        document.getElementById('header-progress').innerText =
+          `${count} / 6 INGREDIENTS`;
+        document.getElementById('footer-count').innerText =
+          `${count} / 6 Collected`;
+        const fillPercent = (count / 6) * 100;
+        gsap.to('#liquid-fill', { y: 100 - fillPercent * 0.4, duration: 1 });
+        const mixBtn = document.getElementById('mix-btn');
+        if (count >= 3) {
+          mixBtn.disabled = false;
+          mixBtn.classList.replace('bg-gray-200', 'primary-bg');
+          mixBtn.classList.replace('text-gray-400', 'text-white');
+          mixBtn.classList.add('shadow-lg');
+        }
+      }
+
+      function showResults() {
+        const count = collected.size;
+        const screen = document.getElementById('result-screen');
+        screen.style.display = 'block';
+        gsap.to(screen, { opacity: 1, duration: 0.5 });
+        let discount =
+          count === 3
+            ? '30%'
+            : count === 4
+              ? '40%'
+              : count === 5
+                ? '50%'
+                : '60%';
+        const couponCodes = {
+          '30%': 'UGADI30',
+          '40%': 'UGADI40',
+          '50%': 'UGADI50',
+          '60%': 'UGADI60',
+        };
+        const coupon = couponCodes[discount];
+        document.getElementById('discount-display').innerText =
+          `${discount} OFF`;
+        document.getElementById('coupon-code-display').innerText = coupon;
+        document
+          .getElementById('copy-coupon-btn')
+          .setAttribute('data-code', coupon);
+        createConfetti();
+      }
+
+      function copyCouponCode() {
+        const code = document
+          .getElementById('copy-coupon-btn')
+          .getAttribute('data-code');
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = code;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        const btn = document.getElementById('copy-coupon-btn');
+        btn.innerText = 'Copied!';
+        setTimeout(() => (btn.innerText = 'Copy Code'), 2000);
+      }
+
+      function createConfetti() {
+        for (let i = 0; i < 50; i++) {
+          const conf = document.createElement('div');
+          conf.style.cssText = `position: fixed; width: 10px; height: 10px; background: ${['#25bcb4', '#FFD700', '#FF6347', '#32CD32'][Math.floor(Math.random() * 4)]}; top: -10px; left: ${Math.random() * 100}vw; z-index: 100; border-radius: 2px;`;
+          document.body.appendChild(conf);
+          gsap.to(conf, {
+            y: window.innerHeight + 20,
+            x: `+=${Math.random() * 100 - 50}`,
+            rotation: Math.random() * 360,
+            duration: Math.random() * 2 + 1,
+            ease: 'power1.out',
+            onComplete: () => conf.remove(),
+          });
+        }
+      }
+
+      function shareWhatsApp() {
+        const text = encodeURIComponent(
+          'I just made my own Ugadi Chutney and unlocked a Getto discount! Try it here: https://www.gettoindia.com',
+        );
+        window.open(`https://wa.me/?text=${text}`, '_blank');
+      }
+
+      window.addEventListener('scroll', () => {
+        const sections = document.querySelectorAll('.ingredient-section');
+        let current = 0;
+        sections.forEach((section, i) => {
+          if (section.getBoundingClientRect().top < window.innerHeight / 2)
+            current = i;
+        });
+        updateActiveDot(current);
+      });
+
+      init();
+    </script>
+  </body>
+</html>
