@@ -343,10 +343,12 @@
     <input type="file" id="image-upload" accept="image/*" class="hidden" />
 
     <script>
-      // ==========================================
-      // 🚀 TIER 1 API KEY & MODEL CONFIGURATION
-      // ==========================================
-      const apiKey = 'AIzaSyB3v2AYO1jVG1G3ORulOh53h1iSVRspTQE';
+      /**
+       * 🔒 SECURITY PLACEHOLDER
+       * On GitHub, replace this via GitHub Actions using secrets.GEMINI_API_KEY.
+       * For local development, this script will check for a local variable or fallback.
+       */
+      const apiKey = '__GEMINI_API_KEY__';
 
       const ingredients = [
         {
@@ -419,6 +421,14 @@
       }
 
       async function verifyImageMatch(uploadedBase64, ingredient) {
+        // Validation check for the API key
+        if (!apiKey || apiKey === '__GEMINI_API_KEY__') {
+          console.error(
+            'API Key not found. Please set your GEMINI_API_KEY secret in GitHub.',
+          );
+          return { passed: false };
+        }
+
         try {
           const uploadedMimeType = uploadedBase64
             .split(',')[0]
