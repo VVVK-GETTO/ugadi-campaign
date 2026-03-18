@@ -134,7 +134,7 @@
         <h2 class="text-4xl font-bold mb-2">New Year,</h2>
         <h2 class="text-4xl font-bold primary-text mb-6">New Outfit</h2>
         <p class="text-gray-500 leading-relaxed mb-12 max-w-xs">
-          Celebrate Ugadi by making your own Ugadi Chutney. Find the 6
+          Celebrate Ugadi by making your own Ugadi Chutney. Upload the 6
           ingredients and unlock exclusive Getto discounts.
         </p>
 
@@ -343,19 +343,11 @@
     <input type="file" id="image-upload" accept="image/*" class="hidden" />
 
     <script>
-      /**
-       * 🔒 SECURITY PLACEHOLDER
-       * On GitHub, replace this via GitHub Actions using secrets.GEMINI_API_KEY.
-       * For local development, this script will check for a local variable or fallback.
-       */
-      const apiKey = '__GEMINI_API_KEY__';
-
       const ingredients = [
         {
           id: 'neem',
           name: 'Neem Flowers',
           flavor: 'BITTER',
-          posterLabel: 'NEEM - BITTER',
           symbol: '🍃',
           desc: 'Represents sadness, hardships, or difficulties.',
         },
@@ -363,7 +355,6 @@
           id: 'jaggery',
           name: 'Jaggery',
           flavor: 'SWEET',
-          posterLabel: 'JAGGERY - SWEET',
           symbol: '🍯',
           desc: 'Represents happiness, joy, and success.',
         },
@@ -371,7 +362,6 @@
           id: 'mango',
           name: 'Raw Mango',
           flavor: 'TANGY',
-          posterLabel: 'MANGO - TANGY',
           symbol: '🥭',
           desc: 'Surprises and new challenges.',
         },
@@ -379,7 +369,6 @@
           id: 'tamarind',
           name: 'Tamarind Pulp',
           flavor: 'SOUR',
-          posterLabel: 'TAMARIND - SOUR',
           symbol: '🥣',
           desc: 'Represents unpleasant experiences.',
         },
@@ -387,7 +376,6 @@
           id: 'chili',
           name: 'Green Chili',
           flavor: 'SPICY',
-          posterLabel: 'CHILLY - SPICE',
           symbol: '🌶️',
           desc: 'Represents energy and anger.',
         },
@@ -395,103 +383,12 @@
           id: 'salt',
           name: 'Salt',
           flavor: 'SALTY',
-          posterLabel: 'SALT - SALTY',
           symbol: '🧂',
           desc: 'Represents fear or anxiety.',
         },
       ];
 
       let collected = new Set();
-
-      async function fetchWithRetry(url, options, retries = 5) {
-        const delays = [1000, 2000, 4000, 8000, 16000];
-        for (let i = 0; i < retries; i++) {
-          try {
-            const response = await fetch(url, options);
-            if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(`HTTP ${response.status} - ${errorText}`);
-            }
-            return await response.json();
-          } catch (error) {
-            if (i === retries - 1) throw error;
-            await new Promise((res) => setTimeout(res, delays[i]));
-          }
-        }
-      }
-
-      async function verifyImageMatch(uploadedBase64, ingredient) {
-        // Validation check for the API key
-        if (!apiKey || apiKey === '__GEMINI_API_KEY__') {
-          console.error(
-            'API Key not found. Please set your GEMINI_API_KEY secret in GitHub.',
-          );
-          return { passed: false };
-        }
-
-        try {
-          const uploadedMimeType = uploadedBase64
-            .split(',')[0]
-            .split(':')[1]
-            .split(';')[0];
-          const base64Data = uploadedBase64.split(',')[1];
-
-          const prompt = `You are a professional OCR tool. Analyze this printed campaign poster.
-Check if the following text is clearly visible: "${ingredient.posterLabel}".
-Confirm if this is part of the "Ugadi Treasure Hunt" campaign.
-
-Respond ONLY with valid JSON:
-{
-  "isMatch": boolean,
-  "foundText": "description of identified text"
-}`;
-
-          const payload = {
-            contents: [
-              {
-                role: 'user',
-                parts: [
-                  { text: prompt },
-                  {
-                    inlineData: {
-                      mimeType: uploadedMimeType,
-                      data: base64Data,
-                    },
-                  },
-                ],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.1,
-              responseMimeType: 'application/json',
-            },
-          };
-
-          // Using the requested gemini-3.1-flash-image-preview model via v1beta endpoint
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${apiKey}`;
-
-          const result = await fetchWithRetry(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-
-          const responseText =
-            result.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (!responseText) throw new Error('No response from AI model');
-
-          const jsonResponse = JSON.parse(responseText);
-          console.log(
-            `Verification result for ${ingredient.name}:`,
-            jsonResponse,
-          );
-
-          return { passed: jsonResponse.isMatch === true };
-        } catch (error) {
-          console.error('Verification error details:', error);
-          return { passed: false };
-        }
-      }
 
       function init() {
         const container = document.getElementById('ingredients-container');
@@ -502,7 +399,10 @@ Respond ONLY with valid JSON:
           section.innerHTML = `
                     <div class="relative w-48 h-48 mb-8">
                         <div class="absolute inset-0 bg-gray-50 rounded-full"></div>
-                        <div class="absolute inset-0 flex items-center justify-center text-6xl">${ing.symbol}</div>
+                        <div class="absolute inset-0 flex items-center justify-center text-6xl" id="symbol-${idx}">${ing.symbol}</div>
+                        <div class="absolute inset-0 hidden rounded-full overflow-hidden" id="preview-container-${idx}">
+                             <img src="" id="preview-${idx}" class="w-full h-full object-cover" />
+                        </div>
                     </div>
                     <div class="glass-badge mb-4">${ing.flavor}</div>
                     <h3 class="text-3xl font-bold mb-4">${ing.name}</h3>
@@ -569,39 +469,36 @@ Respond ONLY with valid JSON:
 
           const btn = document.getElementById(`upload-btn-${targetIdx}`);
           const status = document.getElementById(`status-${targetIdx}`);
+          const preview = document.getElementById(`preview-${targetIdx}`);
+          const previewContainer = document.getElementById(
+            `preview-container-${targetIdx}`,
+          );
+          const symbol = document.getElementById(`symbol-${targetIdx}`);
 
           btn.innerHTML = `<div class="loader" style="width: 30px; height: 30px; border-color: white; border-top-color: transparent;"></div>`;
-          status.innerHTML = `<span class="text-gray-500">Verifying...</span>`;
+          status.innerHTML = `<span class="text-gray-500">Adding to bowl...</span>`;
           status.classList.remove('hidden');
 
-          const base64 = await fileToBase64(file);
-          const ingredient = ingredients[targetIdx];
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            // Fake a short delay for smooth UI feel
+            setTimeout(() => {
+              preview.src = event.target.result;
+              previewContainer.classList.remove('hidden');
+              symbol.classList.add('hidden');
 
-          const { passed } = await verifyImageMatch(base64, ingredient);
+              collected.add(targetIdx);
+              btn.innerHTML = `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
+              btn.classList.replace('primary-bg', 'bg-green-500');
+              status.innerHTML =
+                '<span class="text-green-500 font-bold">Verified!</span>';
 
-          if (!passed) {
-            status.innerHTML = `<span class="text-red-500 font-bold">Verification Failed.</span><br /><span class="text-gray-500 text-xs">Ensure the label "${ingredient.posterLabel}" is clear.</span>`;
-            btn.innerHTML = `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`;
-            return;
-          }
-
-          collected.add(targetIdx);
-          btn.innerHTML = `<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
-          btn.classList.replace('primary-bg', 'bg-green-500');
-          status.innerHTML =
-            '<span class="text-green-500 font-bold">Verified!</span>';
-          updateProgress();
+              updateProgress();
+            }, 800);
+          };
+          reader.readAsDataURL(file);
           e.target.value = '';
         });
-
-      async function fileToBase64(file) {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = (error) => reject(error);
-          reader.readAsDataURL(file);
-        });
-      }
 
       function updateProgress() {
         const count = collected.size;
@@ -609,10 +506,12 @@ Respond ONLY with valid JSON:
           `${count} / 6 INGREDIENTS`;
         document.getElementById('footer-count').innerText =
           `${count} / 6 Collected`;
+
         const fillPercent = (count / 6) * 100;
         gsap.to('#liquid-fill', { y: 100 - fillPercent * 0.4, duration: 1 });
+
         const mixBtn = document.getElementById('mix-btn');
-        if (count >= 3) {
+        if (count >= 1) {
           mixBtn.disabled = false;
           mixBtn.classList.replace('bg-gray-200', 'primary-bg');
           mixBtn.classList.replace('text-gray-400', 'text-white');
@@ -625,21 +524,18 @@ Respond ONLY with valid JSON:
         const screen = document.getElementById('result-screen');
         screen.style.display = 'block';
         gsap.to(screen, { opacity: 1, duration: 0.5 });
-        let discount =
-          count === 3
-            ? '30%'
-            : count === 4
-              ? '40%'
-              : count === 5
-                ? '50%'
-                : '60%';
-        const couponCodes = {
-          '30%': 'UGADI30',
-          '40%': 'UGADI40',
-          '50%': 'UGADI50',
-          '60%': 'UGADI60',
-        };
-        const coupon = couponCodes[discount];
+
+        // Logic: More images = More offers
+        let discount;
+        if (count >= 6) discount = '60%';
+        else if (count === 5) discount = '50%';
+        else if (count === 4) discount = '40%';
+        else if (count === 3) discount = '30%';
+        else if (count === 2) discount = '20%';
+        else discount = '10%';
+
+        const coupon = 'UGADI' + discount.replace('%', '');
+
         document.getElementById('discount-display').innerText =
           `${discount} OFF`;
         document.getElementById('coupon-code-display').innerText = coupon;
